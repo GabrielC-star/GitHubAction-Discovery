@@ -59,19 +59,25 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./simple-api
-          tags: ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-simple-api:latest', secrets.DOCKERHUB_USERNAME) || 'tp-devops-simple-api:ci' }}
+          tags: |
+            ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-simple-api:latest', secrets.DOCKERHUB_USERNAME) || 'tp-devops-simple-api:ci' }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-simple-api:sha-{1}', secrets.DOCKERHUB_USERNAME, github.sha) || format('tp-devops-simple-api:ci-sha-{0}', github.sha) }}
           push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Build database image
         uses: docker/build-push-action@v6
         with:
           context: ./database
-          tags: ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-database:latest', secrets.DOCKERHUB_USERNAME) || 'tp-devops-database:ci' }}
+          tags: |
+            ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-database:latest', secrets.DOCKERHUB_USERNAME) || 'tp-devops-database:ci' }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-database:sha-{1}', secrets.DOCKERHUB_USERNAME, github.sha) || format('tp-devops-database:ci-sha-{0}', github.sha) }}
           push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Build httpd image
         uses: docker/build-push-action@v6
         with:
           context: ./http-server
-          tags: ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-httpd:latest', secrets.DOCKERHUB_USERNAME) || 'tp-devops-httpd:ci' }}
+          tags: |
+            ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-httpd:latest', secrets.DOCKERHUB_USERNAME) || 'tp-devops-httpd:ci' }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}/tp-devops-httpd:sha-{1}', secrets.DOCKERHUB_USERNAME, github.sha) || format('tp-devops-httpd:ci-sha-{0}', github.sha) }}
           push: ${{ github.ref == 'refs/heads/main' }}
