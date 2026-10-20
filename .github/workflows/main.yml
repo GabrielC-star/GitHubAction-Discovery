@@ -26,6 +26,18 @@ jobs:
         working-directory: simple-api
         run: mvn clean verify
 
+      - name: SonarCloud analysis
+        if: github.event_name == 'push'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >-
+          mvn -B verify sonar:sonar
+          -Dsonar.projectKey=GabrielC-star_GitHubAction-Discovery
+          -Dsonar.organization=gabrielc-star
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.token="$SONAR_TOKEN"
+          --file ./simple-api/pom.xml
+
   build-docker-images:
     needs: test-backend
     runs-on: ubuntu-24.04
