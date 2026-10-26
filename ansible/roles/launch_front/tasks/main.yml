@@ -1,0 +1,10 @@
+---
+- name: Start the Vue frontend
+  community.docker.docker_container:
+    name: front
+    image: "{{ dockerhub_username }}/tp-devops-front:{{ docker_image_tag | default('latest') }}"
+    pull: true
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: my-network
