@@ -67,18 +67,18 @@ jobs:
 
       - name: Configure deployment SSH and Vault credentials
         env:
-          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_PRIVATE_KEY_B64: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_B64 }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          test -n "$DEPLOY_SSH_PRIVATE_KEY"
+          test -n "$DEPLOY_SSH_PRIVATE_KEY_B64"
           test -n "$DEPLOY_KNOWN_HOSTS"
           test -n "$ANSIBLE_VAULT_PASSWORD"
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >> "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
-          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/deploy_key"
+          printf '%s' "$DEPLOY_SSH_PRIVATE_KEY_B64" | base64 --decode > "$RUNNER_TEMP/deploy_key"
           chmod 600 "$RUNNER_TEMP/deploy_key"
           printf '%s' "$ANSIBLE_VAULT_PASSWORD" > "$RUNNER_TEMP/vault_password"
           chmod 600 "$RUNNER_TEMP/vault_password"
