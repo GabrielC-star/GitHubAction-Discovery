@@ -1,0 +1,29 @@
+---
+- name: Create persistent PostgreSQL volume
+  community.docker.docker_volume:
+    name: db-volume
+    state: present
+
+- name: Start PostgreSQL and wait until it is healthy
+  community.docker.docker_container:
+    name: database
+    image: "{{ dockerhub_username }}/tp-devops-database:{{ docker_image_tag | default('latest') }}"
+    pull: true
+    state: healthy
+    healthy_wait_timeout: 300
+    restart_policy: unless-stopped
+    env:
+      POSTGRES_DB: "db"
+      POSTGRES_USER: "usr"
+      POSTGRES_PASSWORD: "{{ vault_postgres_password }}"
+    volumes:
+      - db-volume:/var/lib/postgresql/data
+    networks:
+      - name: my-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U usr -d db
+      interval: 10s
+      timeout: 5s
+      retries: 10

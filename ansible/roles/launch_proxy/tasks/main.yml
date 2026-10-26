@@ -1,0 +1,12 @@
+---
+- name: Start Apache HTTP proxy
+  community.docker.docker_container:
+    name: httpd
+    image: "{{ dockerhub_username }}/tp-devops-httpd:{{ docker_image_tag | default('latest') }}"
+    pull: true
+    state: started
+    restart_policy: unless-stopped
+    published_ports:
+      - "80:80"
+    networks:
+      - name: my-network

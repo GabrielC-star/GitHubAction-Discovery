@@ -6,6 +6,9 @@ on:
     types: [completed]
     branches: ["main"]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-push-docker-image:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
@@ -51,3 +54,42 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:sha-${{ github.event.workflow_run.head_sha }}
           push: true
+
+      - name: Set up Python for Ansible
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Ansible and Docker collection
+        run: |
+          python -m pip install ansible-core
+          ansible-galaxy collection install -r ansible/requirements.yml
+
+      - name: Configure deployment SSH and Vault credentials
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+        run: |
+          test -n "$DEPLOY_SSH_PRIVATE_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          test -n "$ANSIBLE_VAULT_PASSWORD"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >> "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/deploy_key"
+          chmod 600 "$RUNNER_TEMP/deploy_key"
+          printf '%s' "$ANSIBLE_VAULT_PASSWORD" > "$RUNNER_TEMP/vault_password"
+          chmod 600 "$RUNNER_TEMP/vault_password"
+
+      - name: Deploy application with Ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "True"
+        run: >-
+          ansible-playbook
+          -i ansible/inventories/setup.yml
+          ansible/deploy.yml
+          --private-key "$RUNNER_TEMP/deploy_key"
+          --vault-password-file "$RUNNER_TEMP/vault_password"
+          -e docker_image_tag=sha-${{ github.event.workflow_run.head_sha }}

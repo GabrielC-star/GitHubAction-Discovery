@@ -1,0 +1,12 @@
+---
+- name: Deploy the application stack
+  hosts: all
+  gather_facts: false
+  become: true
+  vars:
+    ansible_python_interpreter: /opt/docker_venv/bin/python
+  roles:
+    - create_network
+    - launch_database
+    - launch_app
+    - launch_proxy
